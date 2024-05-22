@@ -1,0 +1,71 @@
+grumphp:
+  environment:
+    variables:
+      #important config. Otherwise, not recognize git diff changes. See .git/hooks/pre-comit.
+      GRUMPHP_PROJECT_DIR: "."
+      GRUMPHP_BIN_DIR: "../../../../magento2/magento/vendor/bin"
+  fixer:
+    enabled: false
+    fix_by_default: false
+  tasks:
+    phpversion:
+      project: '8.0'
+    # composer:
+    #   file: ./composer.json
+    #   no_check_all: false
+    #   no_check_lock: true
+    #   no_check_publish: false
+    #   with_dependencies: false
+    #   strict: false
+    git_commit_message:
+      max_body_width: 200
+      max_subject_width: 200
+    git_blacklist:
+      keywords:
+        - "\\.dev"
+        - "\\.local"
+        - "\\.test"
+        - "<<<<<<<"
+        - "======="
+        - "DebuggerUtility"
+        - "ObjectManager::getInstance"
+        - "_GET\\["
+        - "_POST\\["
+        - "_REQUEST\\["
+        - "console.log("
+        - "die("
+        - "die;"
+        - "exit("
+        - "exit;"
+        - "fileadmin"
+        - "localhost"
+        - "phpinfo"
+        - "phpinfo("
+        - "print_r("
+        - "var_dump("
+        - "_objectManager"
+        - "ObjectManagerInterface"
+      triggered_by: [ 'php', 'js', 'html', 'phtml' ]
+    phpcs:
+      standard: Magento2
+      warning_severity: 0
+      triggered_by: [ 'php', 'js', 'html', 'phtml' ]
+    phpcsfixer:
+      allow_risky: ~
+      cache_file: ~
+      config: '../../../../magento2/.php-cs-fixer.php'
+      rules: [ ]
+      using_cache: false
+      config_contains_finder: true
+      verbose: true
+      diff: false
+      triggered_by: [ 'php' ]
+    phpstan:
+      autoload_file: ~
+      level: 8
+      #configuration: '../../../../magento2/phpstan.neon'
+      triggered_by: [ 'php', 'js', 'html', 'phtml' ]
+    phpmd:
+      ruleset: [ '../../../../magento2/magento/dev/tests/static/testsuite/Magento/Test/Php/_files/phpmd/ruleset.xml' ]
+      triggered_by: [ 'php', 'js', 'html', 'phtml' ]
+
