@@ -1,0 +1,5 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/topology.xsd">
+    <exchange name="magento" type="topic">
+        <binding id="KromboxDownloadableLinksSync" topic="krombox.downloadable_links.sync" destinationType="queue" destination="krombox.downloadable_links.sync"/>
+    </exchange>
+</config>

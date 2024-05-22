@@ -1,0 +1,18 @@
+{
+    "name": "krombox/module-downloadable-links-sync",
+    "description": "Magento 2 module to sync links for placed orders",
+    "license": "MIT",
+    "type": "magento2-module",
+    "autoload": {
+        "psr-4": {
+            "Krombox\\DownloadableLinksSync\\": ""
+        },
+        "files": [
+            "registration.php"
+        ]
+    },
+    "require": {
+        "php": ">=8.0",
+        "magento/framework": "^102.0|^103.0"
+    }
+}
