@@ -10,6 +10,7 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DataObject\Copy;
 use Magento\Framework\Model\ResourceModel\Iterator;
 use Magento\Sales\Api\Data\OrderItemInterface;
+use Magento\Store\Api\StoreRepositoryInterface;
 
 class Update implements ProcessorInterface
 {
@@ -19,7 +20,8 @@ class Update implements ProcessorInterface
         private Iterator $iterator,
         private Copy $objectCopyService,
         private Manager $linkManager,
-        private ResourceConnection $connection
+        private ResourceConnection $connection,
+        private StoreRepositoryInterface $storeRepository
     ) {
     }
 
@@ -32,19 +34,22 @@ class Update implements ProcessorInterface
      */
     public function process(MessageInterface $message): void
     {
-        $linkToUpdate = $this->linkManager->getLink($message->getLinkId());
+        foreach ($this->storeRepository->getList() as $store) {
+            $storeId = $store->getId();
+            $linkToUpdate = $this->linkManager->getLink($message->getLinkId(), $storeId);
 
-        /** If link removed stop further processing */
-        if (!$linkToUpdate) {
-            return;
+            /** If link removed stop further processing */
+            if (!$linkToUpdate) {
+                return;
+            }
+
+            $linkPurchasedCollection = $this->getLinkPurchasedItemCollectionByIds($message->getIds(), $storeId);
+            $this->iterator->walk(
+                $linkPurchasedCollection->getSelect(),
+                [[$this, 'updateLink']],
+                ['link' => $linkToUpdate]
+            );
         }
-
-        $linkPurchasedCollection = $this->getLinkPurchasedItemCollectionByIds($message->getIds());
-        $this->iterator->walk(
-            $linkPurchasedCollection->getSelect(),
-            [[$this, 'updateLink']],
-            ['link' => $linkToUpdate]
-        );
     }
 
     /**
@@ -68,7 +73,15 @@ class Update implements ProcessorInterface
         $numberOfDownloads = $this->getNumberOfDownloads($link, $linkPurchasedItem);
         $linkPurchasedItem->setNumberOfDownloadsBought($numberOfDownloads);
 
-        $this->linkManager->saveLinkPurchasedItem($linkPurchasedItem);
+        /** Link updated check */
+        if ($this->hasChanges($linkPurchasedItem)) {
+            $this->linkManager->saveLinkPurchasedItem($linkPurchasedItem);
+        }
+    }
+
+    private function hasChanges(Item $linkPurchasedItem):bool
+    {
+        return (bool)$linkPurchasedItem->getOrigData() !== $linkPurchasedItem->getData();
     }
 
     private function getNumberOfDownloads(LinkInterface $link, Item $item): int
@@ -81,13 +94,14 @@ class Update implements ProcessorInterface
      *
      * @return \Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\Collection
      */
-    private function getLinkPurchasedItemCollectionByIds(array $ids)
+    private function getLinkPurchasedItemCollectionByIds(array $ids, int $storeId)
     {
         $connection = $this->connection->getConnection();
         $orderItemTableName = $connection->getTableName('sales_order_item');
 
         $orderItemJoinCondition = [
-            $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = main_table.order_item_id'
+            $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = main_table.order_item_id',
+            $orderItemTableName . '.' . OrderItemInterface::STORE_ID . ' = ' . $storeId
         ];
 
         return $this->linkManager->createLinkPurchasedItemCollection()

@@ -162,12 +162,12 @@ class Manager
      *
      * @return Link|null
      */
-    public function getLink(int $linkId): Link|null
+    public function getLink(int $linkId, int $storeId = 0): Link|null
     {
         /** @var Link $link */
         $link = $this->createLinkCollection()
             ->addFieldToFilter('main_table.link_id', ['eq' => $linkId])
-            ->addTitleToResult()
+            ->addTitleToResult($storeId)
             //->addPriceToResult()
             ->getFirstItem();
 
