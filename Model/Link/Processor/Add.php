@@ -15,6 +15,7 @@ use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Collection as LinkPurchasedCollection;
+use Magento\Store\Api\StoreRepositoryInterface;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -28,7 +29,8 @@ class Add implements ProcessorInterface
         private Copy $objectCopyService,
         private ResourceConnection $connection,
         private ScopeConfigInterface $scopeConfig,
-        private Manager $linkManager
+        private Manager $linkManager,
+        private StoreRepositoryInterface $storeRepository
     ) {
     }
 
@@ -41,15 +43,18 @@ class Add implements ProcessorInterface
      */
     public function process(MessageInterface $message): void
     {
-        $linkToAdd = $this->linkManager->getLink($message->getLinkId());
+        foreach ($this->storeRepository->getList() as $store) {
+            $storeId = $store->getId();
+            $linkToAdd = $this->linkManager->getLink($message->getLinkId(), $storeId);
 
-        /** If link removed stop further processing */
-        if (!$linkToAdd) {
-            return;
+            /** If link removed stop further processing */
+            if (!$linkToAdd) {
+                return;
+            }
+
+            $linkPurchasedCollection = $this->getLinkPurchasedCollectionWhereLinkMissedByIds($message->getIds(), $linkToAdd, $storeId);
+            $this->iterator->walk($linkPurchasedCollection->getSelect(), [[$this, 'addLink']], ['link' => $linkToAdd]);
         }
-
-        $linkPurchasedCollection = $this->getLinkPurchasedCollectionWhereLinkMissedByIds($message->getIds(), $linkToAdd);
-        $this->iterator->walk($linkPurchasedCollection->getSelect(), [[$this, 'addLink']], ['link' => $linkToAdd]);
     }
 
     /**
@@ -148,7 +153,7 @@ class Add implements ProcessorInterface
      *
      * @return LinkPurchasedCollection
      */
-    private function getLinkPurchasedCollectionWhereLinkMissedByIds(array $ids, Link $link): LinkPurchasedCollection
+    private function getLinkPurchasedCollectionWhereLinkMissedByIds(array $ids, Link $link, int $storeId): LinkPurchasedCollection
     {
         $connection = $this->connection->getConnection();
         $orderTableName = $connection->getTableName('sales_order');
@@ -159,7 +164,8 @@ class Add implements ProcessorInterface
         ];
 
         $orderItemJoinCondition = [
-            $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = main_table.order_item_id'
+            $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = main_table.order_item_id',
+            $orderItemTableName . '.' . OrderItemInterface::STORE_ID . ' = ' . $storeId
         ];
 
         $linkPurchasedCollection = $this->linkManager->getLinkPurchasedCollectionWhereLinkMissed($link)

@@ -16,6 +16,7 @@ use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFacto
 use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\Collection as LinkPurchasedItemCollection;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Catalog\Model\Product;
+use Magento\Sales\Api\Data\OrderItemInterface;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -106,12 +107,60 @@ class Manager
             ->distinct(true);
     }
 
-    public function getLinkPurchasedItemCollectionByLinkId(int $linkId): LinkPurchasedItemCollection
+    public function getLinkPurchasedItemCollection(?int $storeId = null): LinkPurchasedItemCollection
     {
-        return $this->createLinkPurchasedItemCollection()
-            ->addFieldToFilter('link_id', ['eq' => $linkId]);
+        $linkPurchasedCollection = $this->createLinkPurchasedItemCollection();
+
+        if($storeId !== null) {
+            $connection = $this->connection->getConnection();
+            $orderItemTableName = $connection->getTableName('sales_order_item');
+
+            $orderItemJoinCondition = [
+                $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = main_table.order_item_id',
+                $orderItemTableName . '.' . OrderItemInterface::STORE_ID . ' = ' . $storeId
+            ];
+
+            $linkPurchasedCollection
+                ->join(
+                    $orderItemTableName,
+                    implode(' AND ', $orderItemJoinCondition),
+                    ['order_item_qty_ordered' => OrderItemInterface::QTY_ORDERED]
+                );
+        }
+
+        return $linkPurchasedCollection;
     }
 
+    /**
+     * @param int $linkId
+     * @param int|null $storeId
+     *
+     * @return LinkPurchasedItemCollection
+     */
+    public function getLinkPurchasedItemCollectionByLinkId(int $linkId, ?int $storeId = null): LinkPurchasedItemCollection
+    {
+        return $this->getLinkPurchasedItemCollection($storeId)
+            ->addFieldToFilter('main_table.link_id', ['eq' => $linkId]);
+    }
+
+    /**
+     * @param array<string> $ids
+     * @param int|null $storeId
+     *
+     * @return LinkPurchasedItemCollection
+     */
+    public function getLinkPurchasedItemCollectionByIds(array $ids, ?int $storeId = null): LinkPurchasedItemCollection
+    {
+        return $this->getLinkPurchasedItemCollection($storeId)
+            ->addFieldToFilter('main_table.item_id', ['in' => $ids])
+        ;
+    }
+
+    /**
+     * @param int $productId
+     *
+     * @return LinkPurchasedCollection
+     */
     public function getLinkPurchasedCollectionByProductId(int $productId): LinkPurchasedCollection
     {
         $connection = $this->connection->getConnection();
@@ -162,12 +211,12 @@ class Manager
      *
      * @return Link|null
      */
-    public function getLink(int $linkId): Link|null
+    public function getLink(int $linkId, int $storeId = 0): Link|null
     {
         /** @var Link $link */
         $link = $this->createLinkCollection()
             ->addFieldToFilter('main_table.link_id', ['eq' => $linkId])
-            ->addTitleToResult()
+            ->addTitleToResult($storeId)
             //->addPriceToResult()
             ->getFirstItem();
 

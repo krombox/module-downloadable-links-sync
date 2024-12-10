@@ -7,6 +7,7 @@ use Krombox\DownloadableLinksSync\Model\Link\Processor;
 use Magento\Downloadable\Model\Link;
 use Magento\Downloadable\Model\Link\Purchased\Item;
 use Magento\Framework\DataObject\Copy;
+use Magento\Store\Api\StoreRepositoryInterface;
 
 class Update implements HandlerInterface
 {
@@ -16,7 +17,8 @@ class Update implements HandlerInterface
         private Config $config,
         private Copy $objectCopyService,
         private \Krombox\DownloadableLinksSync\Model\Link\Manager $linkManager,
-        private \Krombox\DownloadableLinksSync\Model\MessageManager $messageManager
+        private \Krombox\DownloadableLinksSync\Model\MessageManager $messageManager,
+        private StoreRepositoryInterface $storeRepository
     ) {
     }
 
@@ -25,22 +27,34 @@ class Update implements HandlerInterface
      */
     public function handle(Link $link): void
     {
-        $linkPurchasedItemIds = $this->getLinkPurchasedItemIdsToUpdate($link);
+        foreach ($this->storeRepository->getList() as $store) {
+            $storeId = $store->getId();
+            /** Load link for the exact store ID*/
+            $linkToUpdate = $this->linkManager->getLink($link->getId(), $storeId);
 
-        foreach (array_chunk($linkPurchasedItemIds, $this->config->getChunkSize()) as $chunkIds) {
-            $this->messageManager->createMessage(Processor\Update::ACTION_NAME, $chunkIds, $link->getId());
+            /** If link removed stop further processing */
+            if (!$linkToUpdate) {
+                return;
+            }
+
+            $linkPurchasedItemIds = $this->getLinkPurchasedItemIdsToUpdate($linkToUpdate, $storeId);
+
+            foreach (array_chunk($linkPurchasedItemIds, $this->config->getChunkSize()) as $chunkIds) {
+                $this->messageManager->createMessage(Processor\Update::ACTION_NAME, $chunkIds, $link->getId());
+            }
         }
     }
 
     /**
      * @param Link $link
+     * @param int $storeId
      *
-     * @return string[]
+     * @return array<string>
      */
-    private function getLinkPurchasedItemIdsToUpdate(Link $link): array
+    private function getLinkPurchasedItemIdsToUpdate(Link $link, int $storeId): array
     {
         $linkPurchasedItemIds = [];
-        $linkPurchasedItemCollection = $this->linkManager->getLinkPurchasedItemCollectionByLinkId($link->getId());
+        $linkPurchasedItemCollection = $this->linkManager->getLinkPurchasedItemCollectionByLinkId($link->getId(), $storeId);
 
         foreach ($linkPurchasedItemCollection as $linkPurchasedItem) {
             /** Link updated check */
@@ -64,6 +78,6 @@ class Update implements HandlerInterface
         $linkPurchasedItem->setNumberOfDownloadsBought($link->getNumberOfDownloads());
 
         /** Link updated check */
-        return ($linkPurchasedItem->getOrigData() !== $linkPurchasedItem->getData()) ?: false;
+        return $linkPurchasedItem->getOrigData() !== $linkPurchasedItem->getData();
     }
 }
