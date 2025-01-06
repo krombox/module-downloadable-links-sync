@@ -23,11 +23,25 @@ class LinkRepository
 
     private function hasDataChanges(Link $productLink, Link $linkToCompare): bool
     {
-        /** Set price precision to 6 digits to align with data from DB */
-        $linkToCompare->setPrice((float)number_format($linkToCompare->getPrice(), 6));
-        $linkToCompareData = $linkToCompare->toArray();
-        $productLinkData = $productLink->toArray();
-        $linkDataDiff = array_intersect_key(array_diff_assoc($linkToCompareData, $productLinkData), $productLinkData);
+        /** Do not include price in comprassion */
+        $unsetAttributes = ['price'];
+        /** Check for an extension attribites and unset if not empty. This prevents error on array_diff_assoc
+         * comprassion. Currently do not support extension attribites changes. */
+        if($linkToCompare->getExtensionAttributes() !== null && $productLink->getExtensionAttributes() !== null) {
+            $unsetAttributes = array_merge($unsetAttributes, ['extension_attributes']);
+        }
+
+        $linkToCompare->unsetData($unsetAttributes);
+        $linkToCompareData = $linkToCompare->getData();
+        $productLinkData = $productLink->getData();
+
+        $linkDataDiff = array_diff_assoc($linkToCompareData, $productLinkData);
+
+        $linkDataDiff = array_intersect_key(
+            $linkDataDiff,
+            $productLinkData
+        );
+
         return !empty($linkDataDiff);
     }
 
