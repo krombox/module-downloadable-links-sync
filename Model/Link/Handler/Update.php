@@ -15,7 +15,6 @@ class Update implements HandlerInterface
 
     public function __construct(
         private Config $config,
-        private Copy $objectCopyService,
         private \Krombox\DownloadableLinksSync\Model\Link\Manager $linkManager,
         private \Krombox\DownloadableLinksSync\Model\MessageManager $messageManager,
         private StoreRepositoryInterface $storeRepository
@@ -37,47 +36,11 @@ class Update implements HandlerInterface
                 return;
             }
 
-            $linkPurchasedItemIds = $this->getLinkPurchasedItemIdsToUpdate($linkToUpdate, $storeId);
+            $linkPurchasedItemCollection = $this->linkManager->getLinkPurchasedItemCollectionByLinkId($linkToUpdate->getId(), $storeId);
 
-            foreach (array_chunk($linkPurchasedItemIds, $this->config->getChunkSize()) as $chunkIds) {
-                $this->messageManager->createMessage(Processor\Update::ACTION_NAME, $chunkIds, $link->getId());
+            foreach (array_chunk($linkPurchasedItemCollection->getAllIds(), $this->config->getChunkSize()) as $chunkIds) {
+                $this->messageManager->createMessage(Processor\Update::ACTION_NAME, $chunkIds, $linkToUpdate->getId());
             }
         }
-    }
-
-    /**
-     * @param Link $link
-     * @param int $storeId
-     *
-     * @return array<string>
-     */
-    private function getLinkPurchasedItemIdsToUpdate(Link $link, int $storeId): array
-    {
-        $linkPurchasedItemIds = [];
-        $linkPurchasedItemCollection = $this->linkManager->getLinkPurchasedItemCollectionByLinkId($link->getId(), $storeId);
-
-        foreach ($linkPurchasedItemCollection as $linkPurchasedItem) {
-            /** Link updated check */
-            if ($this->hasChanges($link, $linkPurchasedItem)) {
-                $linkPurchasedItemIds[] = $linkPurchasedItem->getData('item_id');
-            }
-        }
-
-        return $linkPurchasedItemIds;
-    }
-
-    private function hasChanges(Link $link, Item $linkPurchasedItem): bool
-    {
-        $this->objectCopyService->copyFieldsetToTarget(
-            'downloadable_sales_copy_link',
-            'to_purchased',
-            $link,
-            $linkPurchasedItem
-        );
-        /** This value doesn`t copy in previous step */
-        $linkPurchasedItem->setNumberOfDownloadsBought($link->getNumberOfDownloads());
-
-        /** Link updated check */
-        return $linkPurchasedItem->getOrigData() !== $linkPurchasedItem->getData();
     }
 }

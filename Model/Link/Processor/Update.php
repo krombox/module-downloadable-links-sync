@@ -42,9 +42,10 @@ class Update implements ProcessorInterface
                 return;
             }
 
-            $linkPurchasedCollection = $this->linkManager->getLinkPurchasedItemCollectionByIds($message->getIds(), $storeId);
+            $linkPurchasedItemCollection =
+                $this->linkManager->getLinkPurchasedItemCollectionByIds($message->getIds(), $storeId);
             $this->iterator->walk(
-                $linkPurchasedCollection->getSelect(),
+                $linkPurchasedItemCollection->getSelect(),
                 [[$this, 'updateLink']],
                 ['link' => $linkToUpdate]
             );
@@ -71,11 +72,20 @@ class Update implements ProcessorInterface
 
         $numberOfDownloads = $this->getNumberOfDownloads($link, $linkPurchasedItem);
         $linkPurchasedItem->setNumberOfDownloadsBought($numberOfDownloads);
-        $this->linkManager->saveLinkPurchasedItem($linkPurchasedItem);
+
+        if ($this->hasChanges($linkPurchasedItem)) {
+            $this->linkManager->saveLinkPurchasedItem($linkPurchasedItem);
+        }
     }
 
     private function getNumberOfDownloads(LinkInterface $link, Item $item): int
     {
         return $link->getNumberOfDownloads() * $item['order_item_qty_ordered'];
+    }
+
+    private function hasChanges(Item $linkPurchasedItem): bool
+    {
+        /** Link updated check */
+        return $linkPurchasedItem->getOrigData() !== $linkPurchasedItem->getData();
     }
 }
