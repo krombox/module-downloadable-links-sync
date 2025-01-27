@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="downloadable_link_purchased_item" resource="default">
+        <index referenceId="DOWNLOADABLE_LINK_PURCHASED_ITEM_PRODUCT_ID" indexType="btree">
+            <column name="product_id"/>
+        </index>
+        <index referenceId="DOWNLOADABLE_LINK_PURCHASED_ITEM_LINK_ID" indexType="btree">
+            <column name="link_id"/>
+        </index>
+    </table>
+</schema>
