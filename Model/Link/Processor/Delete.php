@@ -7,10 +7,11 @@ use Magento\Framework\App\ResourceConnection;
 
 class Delete implements ProcessorInterface
 {
-    public const ACTION_NAME = 'delete';
-
+    /**
+     * @param ResourceConnection $resourceConnection
+     */
     public function __construct(
-        private ResourceConnection $resourceConnection
+        private readonly ResourceConnection $resourceConnection
     ) {
     }
 

@@ -9,4 +9,26 @@
             <column name="link_id"/>
         </index>
     </table>
+
+    <table name="krombox_downloadable_links_sync_queue" engine="innodb" comment="Downloadable Links Sync Queue">
+        <column xsi:type="int" name="queue_id" padding="10" unsigned="true" nullable="false" identity="true"
+                comment="Queue Id"/>
+        <column xsi:type="int" name="product_id" comment="Product id" identity="false" nullable="false"
+                unsigned="true"/>
+
+        <column xsi:type="int" name="link_id" comment="Link id" identity="false" nullable="false"
+                unsigned="true"/>
+
+        <column xsi:type="text" name="action" comment="Action" nullable="false"/>
+        <column xsi:type="longtext" name="ids" comment="Ids" nullable="false"/>
+
+
+        <constraint xsi:type="foreign" referenceId="KROMBOX_DOWNLOADABLELINKSSYNC_QUEUE_PRODUCT_ID_CATALOG_PRODUCT_ENTITY_ENTITY_ID"
+                    table="krombox_downloadable_links_sync_queue" column="product_id" referenceTable="catalog_product_entity"
+                    referenceColumn="entity_id" onDelete="CASCADE"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="queue_id"/>
+        </constraint>
+    </table>
 </schema>

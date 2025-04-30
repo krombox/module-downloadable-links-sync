@@ -6,21 +6,25 @@ use Krombox\DownloadableLinksSync\Api\MessageInterface;
 use Krombox\DownloadableLinksSync\Model\Link\Manager;
 use Magento\Downloadable\Api\Data\LinkInterface;
 use Magento\Downloadable\Model\Link\Purchased\Item;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DataObject\Copy;
 use Magento\Framework\Model\ResourceModel\Iterator;
-use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
 
 class Update implements ProcessorInterface
 {
-    public const ACTION_NAME = 'update';
-
+    /**
+     * Update constructor.
+     *
+     * @param Iterator $iterator
+     * @param Copy $objectCopyService
+     * @param Manager $linkManager
+     * @param StoreRepositoryInterface $storeRepository
+     */
     public function __construct(
-        private Iterator $iterator,
-        private Copy $objectCopyService,
-        private Manager $linkManager,
-        private StoreRepositoryInterface $storeRepository
+        private readonly Iterator $iterator,
+        private readonly Copy $objectCopyService,
+        private readonly Manager $linkManager,
+        private readonly StoreRepositoryInterface $storeRepository
     ) {
     }
 
@@ -42,10 +46,12 @@ class Update implements ProcessorInterface
                 return;
             }
 
-            $linkPurchasedItemCollection =
-                $this->linkManager->getLinkPurchasedItemCollectionByIds($message->getIds(), $storeId);
+            $linkPurchasedCollection = $this->linkManager->getLinkPurchasedItemCollectionByIds(
+                $message->getIds(),
+                $storeId
+            );
             $this->iterator->walk(
-                $linkPurchasedItemCollection->getSelect(),
+                $linkPurchasedCollection->getSelect(),
                 [[$this, 'updateLink']],
                 ['link' => $linkToUpdate]
             );
@@ -72,20 +78,11 @@ class Update implements ProcessorInterface
 
         $numberOfDownloads = $this->getNumberOfDownloads($link, $linkPurchasedItem);
         $linkPurchasedItem->setNumberOfDownloadsBought($numberOfDownloads);
-
-        if ($this->hasChanges($linkPurchasedItem)) {
-            $this->linkManager->saveLinkPurchasedItem($linkPurchasedItem);
-        }
+        $this->linkManager->saveLinkPurchasedItem($linkPurchasedItem);
     }
 
     private function getNumberOfDownloads(LinkInterface $link, Item $item): int
     {
         return $link->getNumberOfDownloads() * $item['order_item_qty_ordered'];
-    }
-
-    private function hasChanges(Item $linkPurchasedItem): bool
-    {
-        /** Link updated check */
-        return $linkPurchasedItem->getOrigData() !== $linkPurchasedItem->getData();
     }
 }

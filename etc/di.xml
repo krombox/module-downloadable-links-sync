@@ -1,38 +1,68 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Krombox\DownloadableLinksSync\Api\MessageInterface" type="Krombox\DownloadableLinksSync\Model\Message"/>
-
-    <type name="Krombox\DownloadableLinksSync\Model\Link\ResolverPool">
-        <arguments>
-            <argument name="resolvers" xsi:type="array">
-                <item name="add" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Resolver\Add</item>
-                <item name="delete" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Resolver\Delete</item>
-                <item name="update" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Resolver\Update</item>
-            </argument>
-        </arguments>
-    </type>
-
-    <type name="Krombox\DownloadableLinksSync\Model\Link\ProcessorPool">
-        <arguments>
-            <argument name="processors" xsi:type="array">
-                <item name="add" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Processor\Add</item>
-                <item name="delete" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Processor\Delete</item>
-                <item name="update" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Processor\Update</item>
-            </argument>
-        </arguments>
-    </type>
-
-    <type name="Krombox\DownloadableLinksSync\Model\Link\HandlerPool">
-        <arguments>
-            <argument name="handlers" xsi:type="array">
-                <item name="add" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Handler\Add</item>
-                <item name="delete" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Handler\Delete</item>
-                <item name="update" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Handler\Update</item>
-            </argument>
-        </arguments>
-    </type>
+    <preference for="Krombox\DownloadableLinksSync\Api\Data\QueueInterface" type="Krombox\DownloadableLinksSync\Model\Link\Queue"/>
+    <preference for="Krombox\DownloadableLinksSync\Model\Link\Storage\StorageInterface" type="Krombox\DownloadableLinksSync\Model\Link\Storage\MessageQueue"/>
+    <preference for="Krombox\DownloadableLinksSync\Model\Link\Provider\ProviderInterface" type="Krombox\DownloadableLinksSync\Model\Link\Provider\Main"/>
 
     <type name="Magento\Downloadable\Model\LinkRepository">
         <plugin name="krombox_downloadablelinkssync_plugin_model_linkrepository" type="Krombox\DownloadableLinksSync\Plugin\Model\LinkRepository"/>
     </type>
+
+    <type name="Krombox\DownloadableLinksSync\Model\Link\OperationPool">
+        <arguments>
+            <argument name="operations" xsi:type="array">
+                <item name="add" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Operation\Add</item>
+                <item name="delete" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Operation\Delete</item>
+                <item name="update" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Operation\Update</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Krombox\DownloadableLinksSync\Model\Link\Operation\Add" type="Krombox\DownloadableLinksSync\Model\Link\Operation">
+        <arguments>
+            <argument name="name" xsi:type="string">add</argument>
+            <argument name="resolver" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Resolver\Add</argument>
+            <argument name="processor" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Processor\Add</argument>
+            <argument name="linkProvider" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Provider\Main</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Krombox\DownloadableLinksSync\Model\Link\Operation\Update" type="Krombox\DownloadableLinksSync\Model\Link\Operation">
+        <arguments>
+            <argument name="name" xsi:type="string">update</argument>
+            <argument name="resolver" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Resolver\Update</argument>
+            <argument name="processor" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Processor\Update</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Krombox\DownloadableLinksSync\Model\Link\Operation\Delete" type="Krombox\DownloadableLinksSync\Model\Link\Operation">
+        <arguments>
+            <argument name="name" xsi:type="string">delete</argument>
+            <argument name="resolver" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Resolver\Delete</argument>
+            <argument name="processor" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Processor\Delete</argument>
+            <argument name="linkProvider" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Provider\Delete</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Krombox\DownloadableLinksSync\Model\Link\CliLinkOperationManager" type="Krombox\DownloadableLinksSync\Model\Link\LinkOperationManager">
+        <arguments>
+            <argument name="storage" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Storage\DB</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Krombox\DownloadableLinksSync\Model\Link\Queue\QueueGenerator">
+        <arguments>
+            <argument name="linkOperationManager" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\CliLinkOperationManager</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="krombox_downloadablelinkssync_sync_command" xsi:type="object">Krombox\DownloadableLinksSync\Console\Command\SyncCommand</item>
+            </argument>
+        </arguments>
+    </type>
+
 
 </config>

@@ -12,6 +12,10 @@ synchronized with the existing orders.
 
 The module uses [Magento`s message queue](https://developer.adobe.com/commerce/php/development/components/message-queues/) to process the links sync. AMQP(RabbitMQ) or DB connection is used depend on configuration.
 
+## Prerequirements
+
+1) PHP >= 8.0
+
 ## Installation
 
 To install, use composer:
@@ -24,15 +28,60 @@ bin/magento setup:upgrade
 
 ## Usage
 
-To handle the queue either [CRON](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cli/configure-cron-jobs) or [CLI](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cli/start-message-queues) command needs to be run ``bin/magento queue:consumers:start krombox.downloadable_links.sync --max-messages=1``
+To process the queue, either enable [CRON](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cli/configure-cron-jobs) or run the following  [CLI](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/cli/start-message-queues) command manually: ``bin/magento queue:consumers:start krombox.downloadable_links.sync --max-messages=1``
 
-## Prerequirements
+## CLI command
 
-1) PHP >= 8.0
+If you want to sync multiple products at once or are experiencing timeout issues due to a large number of related orders, you can use the CLI command as an alternative. By default, all products on your store will be processed.
+
+``bin/magento krombox:downloadable_links:sync``
+
+To sync specific product links, use the ``--product-ids`` option to limit processing to particular product IDs or ID ranges. In the example below, command processes products with the following IDs: 1,3,4,5,8,10,11,12.
+
+``bin/magento krombox:downloadable_links:sync --product-ids 1,3-5,8,10-12``
+
+## Extensibility
+
+You can extend the module by creating a custom operation. To do so, create a [virtualType](https://developer.adobe.com/commerce/php/development/build/dependency-injection-file/#virtual-types) for the class ``Krombox\DownloadableLinksSync\Model\Link\Operation`` with the appropriate configuration.
+
+```xml
+<virtualType name="Krombox\DownloadableLinksSync\Model\Link\Operation\Custom" type="Krombox\DownloadableLinksSync\Model\Link\Operation">
+    <arguments>
+        <argument name="name" xsi:type="string">add</argument>
+        <argument name="resolver" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Resolver\Custom</argument>
+        <argument name="processor" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Processor\Custom</argument>
+        <argument name="linkProvider" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Provider\Main</argument>
+    </arguments>
+</virtualType>
+```
+ 
+Afterward, add custom operation to ``Krombox\DownloadableLinksSync\Model\Link\OperationPool``.
+
+```xml
+ <type name="Krombox\DownloadableLinksSync\Model\Link\OperationPool">
+    <arguments>
+        <argument name="operations" xsi:type="array">
+            ...
+            <item name="custom" xsi:type="object">Krombox\DownloadableLinksSync\Model\Link\Operation\Custom</item>
+        </argument>
+    </arguments>
+</type>
+```
+    
+Alternatively, you can create a custom operation class by implementing ``Krombox\DownloadableLinksSync\Model\Link\OperationInterface`` interface.
+For more details, please refer to the ``etc/di.xml`` file.
 
 ## Donate
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=MWKEDP5DK5BMN)
+
+**BTC (BitCoin)**: ``1Hut5AaZ8GLGhPpzTM6hrLdzbDjr2WsnWj``
+
+**ETH (Ethereum ERC20)**: ``0x071d770ad10662d5fd98df7b20f78f58bcc77fa4``
+
+**USDT (TRON TRC20)**: ``TNnHwNZLba4D5fJXcyXShEma12qkkgCY6m``
+
+
 
 ## Credits
 

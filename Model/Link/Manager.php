@@ -2,24 +2,25 @@
 
 namespace Krombox\DownloadableLinksSync\Model\Link;
 
-use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Model\Product;
 use Magento\Downloadable\Model\Link;
-use Magento\Downloadable\Model\LinkFactory;
 use Magento\Downloadable\Model\Link\Purchased\Item as LinkPurchasedItem;
 use Magento\Downloadable\Model\Link\Purchased\ItemFactory as LinkPurchasedItemFactory;
+use Magento\Downloadable\Model\LinkFactory;
 use Magento\Downloadable\Model\ResourceModel\Link\Collection as LinkCollection;
 use Magento\Downloadable\Model\ResourceModel\Link\CollectionFactory as LinkCollectionFactory;
-use Magento\Downloadable\Model\ResourceModel\Link\Purchased\CollectionFactory as LinkPurchasedCollectionFactory;
 use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Collection as LinkPurchasedCollection;
+use Magento\Downloadable\Model\ResourceModel\Link\Purchased\CollectionFactory as LinkPurchasedCollectionFactory;
 use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item as LinkPurchasedItemResource;
-use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory as LinkPurchasedItemCollectionFactory;
 use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\Collection as LinkPurchasedItemCollection;
+use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Item\CollectionFactory as LinkPurchasedItemCollectionFactory;
 use Magento\Framework\App\ResourceConnection;
-use Magento\Catalog\Model\Product;
 use Magento\Sales\Api\Data\OrderItemInterface;
 
 /**
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+* Class Manager
+ *
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
 class Manager
 {
@@ -33,13 +34,13 @@ class Manager
      * @param ResourceConnection $connection
      */
     public function __construct(
-        private LinkFactory $linkFactory,
-        private LinkPurchasedCollectionFactory $linkPurchasedCollectionFactory,
-        private LinkPurchasedItemCollectionFactory $linkPurchasedItemCollectionFactory,
-        private LinkCollectionFactory $linkCollectionFactory,
-        private LinkPurchasedItemFactory $linkPurchasedItemFactory,
-        private LinkPurchasedItemResource $linkPurchasedItemResource,
-        private ResourceConnection $connection
+        private readonly LinkFactory $linkFactory,
+        private readonly LinkPurchasedCollectionFactory $linkPurchasedCollectionFactory,
+        private readonly LinkPurchasedItemCollectionFactory $linkPurchasedItemCollectionFactory,
+        private readonly LinkCollectionFactory $linkCollectionFactory,
+        private readonly LinkPurchasedItemFactory $linkPurchasedItemFactory,
+        private readonly LinkPurchasedItemResource $linkPurchasedItemResource,
+        private readonly ResourceConnection $connection
     ) {
     }
 
@@ -57,21 +58,6 @@ class Manager
         return $typeInstance->getLinks($product);
     }
 
-    /**
-     * @param Product $product
-     *
-     * @return Link[]
-     */
-//    public function getProductLinksNew(Product $product): array
-//    {
-//        return array_diff_key($this->getProductLinks($product), $this->getProductLinksPurchased($product));
-//    }
-
-    /**
-     * @param $product
-     *
-     * @return Link[]
-     */
     public function getProductLinksToRemove(Product $product): array
     {
         return array_diff_key($this->getProductLinksPurchased($product), $this->getProductLinks($product));
@@ -92,7 +78,9 @@ class Manager
             $link = $this->linkFactory->create();
             /** @var LinkPurchasedItem $linkPurchasedItem */
             $linkId = $linkPurchasedItem->getLinkId();
-            $link->setLinkId($linkId);
+            $productId = $linkPurchasedItem->getProductId();
+            $link->setId($linkId);
+            $link->setProductId($productId);
             $productLinksPurchased[$linkPurchasedItem->getLinkId()] = $link;
         }
 
@@ -103,6 +91,7 @@ class Manager
     {
         return $this->createLinkPurchasedItemCollection()
             ->addFieldToSelect('link_id')
+            ->addFieldToSelect('product_id')
             ->addFieldToFilter('product_id', ['eq' => $productId])
             ->distinct(true);
     }
@@ -111,7 +100,7 @@ class Manager
     {
         $linkPurchasedCollection = $this->createLinkPurchasedItemCollection();
 
-        if($storeId !== null) {
+        if ($storeId !== null) {
             $connection = $this->connection->getConnection();
             $orderItemTableName = $connection->getTableName('sales_order_item');
 
@@ -137,8 +126,10 @@ class Manager
      *
      * @return LinkPurchasedItemCollection
      */
-    public function getLinkPurchasedItemCollectionByLinkId(int $linkId, ?int $storeId = null): LinkPurchasedItemCollection
-    {
+    public function getLinkPurchasedItemCollectionByLinkId(
+        int $linkId,
+        ?int $storeId = null
+    ): LinkPurchasedItemCollection {
         return $this->getLinkPurchasedItemCollection($storeId)
             ->addFieldToFilter('main_table.link_id', ['eq' => $linkId]);
     }
@@ -152,8 +143,7 @@ class Manager
     public function getLinkPurchasedItemCollectionByIds(array $ids, ?int $storeId = null): LinkPurchasedItemCollection
     {
         return $this->getLinkPurchasedItemCollection($storeId)
-            ->addFieldToFilter('main_table.item_id', ['in' => $ids])
-        ;
+            ->addFieldToFilter('main_table.item_id', ['in' => $ids]);
     }
 
     /**
@@ -182,10 +172,16 @@ class Manager
     {
         $connection = $this->connection->getConnection();
         $linkPurchasedItemTableName = $connection->getTableName('downloadable_link_purchased_item');
+        $orderItemTableName = $connection->getTableName('sales_order_item');
 
         $linkPurchasedItemJoinCondition = [
             $linkPurchasedItemTableName . '.purchased_id = main_table.purchased_id',
             $linkPurchasedItemTableName . '.product_id = ' . $link->getProductId(),
+        ];
+
+        $orderItemJoinCondition = [
+            $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = main_table.order_item_id',
+            $orderItemTableName . '.' . OrderItemInterface::STORE_ID . ' is not NULL'
         ];
 
         $linkPurchasedCollection = $this->createLinkPurchasedCollection()
@@ -193,6 +189,10 @@ class Manager
                 $linkPurchasedItemTableName,
                 implode(' AND ', $linkPurchasedItemJoinCondition),
                 []
+            ) ->join(
+                $orderItemTableName,
+                implode(' AND ', $orderItemJoinCondition),
+                ['order_item_qty_ordered' => OrderItemInterface::QTY_ORDERED]
             );
 
         $linkPurchasedCollection->getSelect()

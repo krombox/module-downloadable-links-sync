@@ -3,12 +3,14 @@
 namespace Krombox\DownloadableLinksSync\Model;
 
 use Krombox\DownloadableLinksSync\Api\MessageInterface;
+use Krombox\DownloadableLinksSync\Api\MessageInterfaceFactory;
+use Krombox\DownloadableLinksSync\Model\Link\Publisher;
 
 class MessageManager
 {
     public function __construct(
-        private \Krombox\DownloadableLinksSync\Model\Link\Publisher $publisher,
-        private \Krombox\DownloadableLinksSync\Api\MessageInterfaceFactory $messageFactory
+        private readonly Publisher $publisher,
+        private readonly MessageInterfaceFactory $messageFactory
     ) {
     }
 
@@ -31,7 +33,7 @@ class MessageManager
      *
      * @return MessageInterface
      */
-    private function prepareMessage(string $action, array $ids, int $linkId): MessageInterface
+    public function prepareMessage(string $action, array $ids, int $linkId): MessageInterface
     {
         return $this->createMessageModel()
             ->setAction($action)

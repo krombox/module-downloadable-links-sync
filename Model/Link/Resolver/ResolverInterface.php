@@ -2,16 +2,16 @@
 
 namespace Krombox\DownloadableLinksSync\Model\Link\Resolver;
 
-use Magento\Catalog\Model\Product;
+use Magento\Downloadable\Model\Link;
 
 interface ResolverInterface
 {
     /**
-     * Method resolve
+     * Resolve ids that need to be processed for the given link.
      *
-     * @param Product $product
+     * @param Link $link
      *
-     * @return void
+     * @return string[]
      */
-    public function resolve(Product $product): void;
+    public function resolve(Link $link): array;
 }

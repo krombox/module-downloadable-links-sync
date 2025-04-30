@@ -13,7 +13,7 @@ class Publisher
      * @param PublisherInterface $publisher
      */
     public function __construct(
-        private PublisherInterface $publisher
+        private readonly PublisherInterface $publisher
     ) {
     }
 

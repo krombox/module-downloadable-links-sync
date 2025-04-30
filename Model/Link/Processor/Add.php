@@ -6,31 +6,36 @@ use Krombox\DownloadableLinksSync\Api\MessageInterface;
 use Krombox\DownloadableLinksSync\Model\Link\Manager;
 use Magento\Downloadable\Api\Data\LinkInterface;
 use Magento\Downloadable\Model\Link;
+use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Collection as LinkPurchasedCollection;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DataObject\Copy;
 use Magento\Framework\Model\ResourceModel\Iterator;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderItemInterface;
-use Magento\Sales\Model\Order;
-use Magento\Store\Model\ScopeInterface;
-use Magento\Downloadable\Model\ResourceModel\Link\Purchased\Collection as LinkPurchasedCollection;
 use Magento\Store\Api\StoreRepositoryInterface;
+use Magento\Store\Model\ScopeInterface;
 
 /**
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
  */
 class Add implements ProcessorInterface
 {
-    public const ACTION_NAME = 'add';
-
+    /**
+     * @param Iterator $iterator
+     * @param Copy $objectCopyService
+     * @param ResourceConnection $connection
+     * @param ScopeConfigInterface $scopeConfig
+     * @param Manager $linkManager
+     * @param StoreRepositoryInterface $storeRepository
+     */
     public function __construct(
-        private Iterator $iterator,
-        private Copy $objectCopyService,
-        private ResourceConnection $connection,
-        private ScopeConfigInterface $scopeConfig,
-        private Manager $linkManager,
-        private StoreRepositoryInterface $storeRepository
+        private readonly Iterator $iterator,
+        private readonly Copy $objectCopyService,
+        private readonly ResourceConnection $connection,
+        private readonly ScopeConfigInterface $scopeConfig,
+        private readonly Manager $linkManager,
+        private readonly StoreRepositoryInterface $storeRepository
     ) {
     }
 
@@ -52,7 +57,11 @@ class Add implements ProcessorInterface
                 return;
             }
 
-            $linkPurchasedCollection = $this->getLinkPurchasedCollectionWhereLinkMissedByIds($message->getIds(), $linkToAdd, $storeId);
+            $linkPurchasedCollection = $this->getLinkPurchasedCollectionWhereLinkMissedByIds(
+                $message->getIds(),
+                $linkToAdd,
+                $storeId
+            );
             $this->iterator->walk($linkPurchasedCollection->getSelect(), [[$this, 'addLink']], ['link' => $linkToAdd]);
         }
     }
@@ -146,15 +155,18 @@ class Add implements ProcessorInterface
     }
 
     /**
-     * Get linkPurchased only when link_id is not already added. Could be the case when you click Sync button mupliple times
-     * but queue still in progress
+     * Get linkPurchased only when link_id is not already added. Could be the case when you click Sync button mupliple
+     * times but queue still in progress
      *
      * @param string[] $ids
      *
      * @return LinkPurchasedCollection
      */
-    private function getLinkPurchasedCollectionWhereLinkMissedByIds(array $ids, Link $link, int $storeId): LinkPurchasedCollection
-    {
+    private function getLinkPurchasedCollectionWhereLinkMissedByIds(
+        array $ids,
+        Link $link,
+        int $storeId
+    ): LinkPurchasedCollection {
         $connection = $this->connection->getConnection();
         $orderTableName = $connection->getTableName('sales_order');
         $orderItemTableName = $connection->getTableName('sales_order_item');
@@ -184,8 +196,7 @@ class Add implements ProcessorInterface
             )
             ->addFieldToSelect('purchased_id')
             ->addFieldToSelect('order_item_id')
-            ->addFieldToFilter('main_table.purchased_id', ['in' => $ids])
-        ;
+            ->addFieldToFilter('main_table.purchased_id', ['in' => $ids]);
 
         return $linkPurchasedCollection;
     }

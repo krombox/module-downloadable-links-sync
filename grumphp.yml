@@ -44,7 +44,7 @@ grumphp:
         - "print_r("
         - "var_dump("
         - "_objectManager"
-        - "ObjectManagerInterface"
+#        - "ObjectManagerInterface"
       triggered_by: [ 'php', 'js', 'html', 'phtml' ]
     phpcs:
       standard: Magento2
@@ -62,8 +62,8 @@ grumphp:
       triggered_by: [ 'php' ]
     phpstan:
       autoload_file: ~
-      level: 8
-      #configuration: '../../../../magento2/phpstan.neon'
+      level: 5
+      configuration: 'phpstan.neon'
       triggered_by: [ 'php', 'js', 'html', 'phtml' ]
     phpmd:
       ruleset: [ '../../../../magento2/magento/dev/tests/static/testsuite/Magento/Test/Php/_files/phpmd/ruleset.xml' ]

@@ -3,28 +3,26 @@
 namespace Krombox\DownloadableLinksSync\Model\Link;
 
 use Krombox\DownloadableLinksSync\Api\MessageInterface;
-use Magento\Framework\Exception\NotFoundException;
 
 class Consumer
 {
     /**
-     * @param Processor $linkProcessor
+     * @param LinkOperationManager $linkOperationManager
      */
     public function __construct(
-        private Processor $linkProcessor
+        private readonly LinkOperationManager $linkOperationManager
     ) {
     }
 
     /**
-     * Method process
+     * Message queue consumer process method.
      *
      * @param MessageInterface $message
      *
      * @return void
-     * @throws NotFoundException
      */
     public function process(MessageInterface $message): void
     {
-        $this->linkProcessor->execute($message);
+        $this->linkOperationManager->processMessage($message);
     }
 }

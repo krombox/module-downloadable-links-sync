@@ -2,6 +2,8 @@
 
 namespace Krombox\DownloadableLinksSync\Model;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Store\Model\ScopeInterface;
 
 abstract class AbstractConfig
@@ -10,12 +12,12 @@ abstract class AbstractConfig
 
     /**
      *
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param \Magento\Framework\Encryption\EncryptorInterface $encryptor
+     * @param ScopeConfigInterface $scopeConfig
+     * @param EncryptorInterface $encryptor
      */
     public function __construct(
-        protected \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        protected \Magento\Framework\Encryption\EncryptorInterface $encryptor
+        protected ScopeConfigInterface $scopeConfig,
+        protected EncryptorInterface $encryptor
     ) {
     }
 

@@ -2,23 +2,21 @@
 
 namespace Krombox\DownloadableLinksSync\Model\Link\Resolver;
 
-use Krombox\DownloadableLinksSync\Model\Link\Handler;
 use Krombox\DownloadableLinksSync\Model\Link\Manager;
+use Magento\Downloadable\Api\Data\LinkInterface;
 
 class Add implements ResolverInterface
 {
     public function __construct(
-        private Manager $linkManager,
-        private Handler $linkHandler
+        private readonly Manager $linkManager,
     ) {
     }
 
-    public function resolve($product): void
+    /**
+     * @inheritDoc
+     */
+    public function resolve(LinkInterface $link): array
     {
-        $productLinksNew = $this->linkManager->getProductLinks($product);
-
-        foreach ($productLinksNew as $link) {
-            $this->linkHandler->execute($link, Handler\Add::ACTION_NAME);
-        }
+        return $this->linkManager->getLinkPurchasedCollectionWhereLinkMissed($link)->getAllIds();
     }
 }

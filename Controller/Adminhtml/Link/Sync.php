@@ -2,21 +2,28 @@
 
 namespace Krombox\DownloadableLinksSync\Controller\Adminhtml\Link;
 
+use Krombox\DownloadableLinksSync\Model\Link\LinkOperationManager;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Sync downloadable links Controller
  */
 class Sync extends Action implements HttpPostActionInterface
 {
+    /**
+     * @param Context $context
+     * @param ProductRepositoryInterface $productRepository
+     * @param LoggerInterface $logger
+     */
     public function __construct(
         Context $context,
-        private ProductRepositoryInterface $productRepository,
-        private \Krombox\DownloadableLinksSync\Model\Link\Resolver $linkResolver,
-        private \Psr\Log\LoggerInterface $logger        
+        private readonly LinkOperationManager $linkOperationManager,
+        private readonly ProductRepositoryInterface $productRepository,
+        private readonly LoggerInterface $logger
     ) {
         parent::__construct($context);
     }
@@ -32,7 +39,7 @@ class Sync extends Action implements HttpPostActionInterface
         /** @var \Magento\Catalog\Model\Product $product */
         $product = $this->productRepository->getById($productId, false, $storeId);
         try {
-            $this->linkResolver->execute($product);
+            $this->linkOperationManager->syncProductLinks($product);
             $message = 'Downloadable links sync queue has been generated successfully.
             It will take some time to process the updates';
             $this->messageManager->addSuccessMessage(__($message));
