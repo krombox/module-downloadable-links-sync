@@ -75,11 +75,15 @@ For more details, please refer to the ``etc/di.xml`` file.
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=MWKEDP5DK5BMN)
 
-**BTC (BitCoin)**: ``1Hut5AaZ8GLGhPpzTM6hrLdzbDjr2WsnWj``
+**BTC (BitCoin)**: ``bc1qqae0g74a6a7djy9a2d76ns4r0ydqvkvm96u82q``
 
-**ETH (Ethereum ERC20)**: ``0x071d770ad10662d5fd98df7b20f78f58bcc77fa4``
+**LTC (Litecoin)**: ``ltc1qsq7l5dje5tlw3778z9vstm4vnf7y40fzczdc2q``
 
-**USDT (TRON TRC20)**: ``TNnHwNZLba4D5fJXcyXShEma12qkkgCY6m``
+**ETH (Ethereum ERC20)**: ``0xADcA955BFd4b9080AfAD99143BF011369d92d7d6``
+
+**SOL (Solana)**: ``H65224SYDw2v2BFVBDJQLAoVXgbwVdhKKyZ9zi6uKUe1``
+
+**USDT (TRON TRC20)**: ``TXaWfYLG1mx82Wh2Ffn4ueze46cBi3jucn``
 
 
 
