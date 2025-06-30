@@ -59,8 +59,7 @@ class Add implements ProcessorInterface
 
             $linkPurchasedCollection = $this->getLinkPurchasedCollectionWhereLinkMissedByIds(
                 $message->getIds(),
-                $linkToAdd,
-                $storeId
+                $linkToAdd
             );
             $this->iterator->walk($linkPurchasedCollection->getSelect(), [[$this, 'addLink']], ['link' => $linkToAdd]);
         }
@@ -159,28 +158,22 @@ class Add implements ProcessorInterface
      * times but queue still in progress
      *
      * @param string[] $ids
+     * @param Link $link
      *
      * @return LinkPurchasedCollection
      */
     private function getLinkPurchasedCollectionWhereLinkMissedByIds(
         array $ids,
-        Link $link,
-        int $storeId
+        Link $link
     ): LinkPurchasedCollection {
         $connection = $this->connection->getConnection();
         $orderTableName = $connection->getTableName('sales_order');
-        $orderItemTableName = $connection->getTableName('sales_order_item');
 
         $orderJoinCondition = [
             $orderTableName . '.' . OrderInterface::ENTITY_ID . ' = main_table.order_id'
         ];
 
-        $orderItemJoinCondition = [
-            $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = main_table.order_item_id',
-            $orderItemTableName . '.' . OrderItemInterface::STORE_ID . ' = ' . $storeId
-        ];
-
-        $linkPurchasedCollection = $this->linkManager->getLinkPurchasedCollectionWhereLinkMissed($link)
+        return $this->linkManager->getLinkPurchasedCollectionWhereLinkMissed($link)
             ->join(
                 $orderTableName,
                 implode(' AND ', $orderJoinCondition),
@@ -189,15 +182,8 @@ class Add implements ProcessorInterface
                     'order_store_id' => OrderInterface::STORE_ID
                 ]
             )
-            ->join(
-                $orderItemTableName,
-                implode(' AND ', $orderItemJoinCondition),
-                ['order_item_qty_ordered' => OrderItemInterface::QTY_ORDERED]
-            )
             ->addFieldToSelect('purchased_id')
             ->addFieldToSelect('order_item_id')
             ->addFieldToFilter('main_table.purchased_id', ['in' => $ids]);
-
-        return $linkPurchasedCollection;
     }
 }

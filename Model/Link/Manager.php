@@ -3,6 +3,7 @@
 namespace Krombox\DownloadableLinksSync\Model\Link;
 
 use Magento\Catalog\Model\Product;
+use Magento\Catalog\Model\Product\Type;
 use Magento\Downloadable\Model\Link;
 use Magento\Downloadable\Model\Link\Purchased\Item as LinkPurchasedItem;
 use Magento\Downloadable\Model\Link\Purchased\ItemFactory as LinkPurchasedItemFactory;
@@ -51,6 +52,13 @@ class Manager
      */
     public function getProductLinks(Product $product): array
     {
+        /*
+         * Virtual product type does not support downloadable links.
+         * Return an empty array to skip link processing.
+         */
+        if($product->getTypeId() === Type::TYPE_VIRTUAL) {
+            return [];
+        }
         /** Set downloadable links null to bypass cache/memory and load latest changes */
         $product->setDownloadableLinks(null);
         /** @var \Magento\Downloadable\Model\Product\Type $typeInstance */
@@ -171,21 +179,30 @@ class Manager
     public function getLinkPurchasedCollectionWhereLinkMissed(Link $link): LinkPurchasedCollection
     {
         $connection = $this->connection->getConnection();
+        $linkPurchasedTableName = 'main_table';
         $linkPurchasedItemTableName = $connection->getTableName('downloadable_link_purchased_item');
         $orderItemTableName = $connection->getTableName('sales_order_item');
 
         $linkPurchasedItemJoinCondition = [
-            $linkPurchasedItemTableName . '.purchased_id = main_table.purchased_id',
-            $linkPurchasedItemTableName . '.product_id = ' . $link->getProductId(),
+            $linkPurchasedItemTableName . '.purchased_id = main_table.purchased_id'
         ];
 
         $orderItemJoinCondition = [
-            $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = main_table.order_item_id',
+            $orderItemTableName . '.' . OrderItemInterface::ITEM_ID . ' = ' . $linkPurchasedTableName . '.order_item_id',
+            $orderItemTableName . '.' . OrderItemInterface::PRODUCT_ID . ' = ' . $link->getProductId(),
             $orderItemTableName . '.' . OrderItemInterface::STORE_ID . ' is not NULL'
         ];
 
-        $linkPurchasedCollection = $this->createLinkPurchasedCollection()
-            ->join(
+        $linkCountExpression = sprintf(
+            'SUM(%s.link_id = %d)',
+            $linkPurchasedItemTableName,
+            $link->getId()
+        );
+
+        $linkPurchasedCollection = $this->createLinkPurchasedCollection();
+        $linkPurchasedCollection
+            ->getSelect()
+            ->joinLeft(
                 $linkPurchasedItemTableName,
                 implode(' AND ', $linkPurchasedItemJoinCondition),
                 []
@@ -193,13 +210,17 @@ class Manager
                 $orderItemTableName,
                 implode(' AND ', $orderItemJoinCondition),
                 ['order_item_qty_ordered' => OrderItemInterface::QTY_ORDERED]
-            );
-
-        $linkPurchasedCollection->getSelect()
-            ->having(
-                new \Zend_Db_Expr('SUM(' . $linkPurchasedItemTableName . '.link_id = ' . $link->getId() . ') = 0')
             )
-            ->group($linkPurchasedItemTableName . '.purchased_id');
+            ->having(
+                new \Zend_Db_Expr(sprintf('(%s = 0)', $linkCountExpression))
+            )
+            ->orHaving(
+                new \Zend_Db_Expr(sprintf('(%s IS NULL)', $linkCountExpression))
+            )
+            ->group([
+                $linkPurchasedTableName . '.purchased_id',
+                $linkPurchasedItemTableName . '.purchased_id'
+            ]);
 
         return $linkPurchasedCollection;
     }

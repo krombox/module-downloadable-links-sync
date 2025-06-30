@@ -3,7 +3,7 @@
 namespace Krombox\DownloadableLinksSync\Block\Adminhtml\Product\Edit\Button;
 
 use Krombox\DownloadableLinksSync\Model\Config;
-use Magento\Downloadable\Model\Product\Type;
+use Krombox\DownloadableLinksSync\Service\ProductTypeChecker;
 use Magento\Framework\Registry;
 use Magento\Framework\View\Element\UiComponent\Context;
 use Magento\Store\Model\StoreManagerInterface;
@@ -13,8 +13,9 @@ class SyncLinks extends \Magento\Catalog\Block\Adminhtml\Product\Edit\Button\Gen
     public function __construct(
         Context $context,
         Registry $registry,
-        private Config $config,
-        private StoreManagerInterface $storeManager
+        private readonly Config $config,
+        private readonly StoreManagerInterface $storeManager,
+        private readonly ProductTypeChecker $productTypeChecker
     ) {
         parent::__construct($context, $registry);
     }
@@ -28,7 +29,10 @@ class SyncLinks extends \Magento\Catalog\Block\Adminhtml\Product\Edit\Button\Gen
 
         if ($this->config->isEnabled()) {
             $product = $this->getProduct();
-            if ($product->getId() && $product->getTypeId() === Type::TYPE_DOWNLOADABLE) {
+            if (
+                $product->getId() &&
+                $this->productTypeChecker->isSyncable($product)
+            ) {
                 $data = [
                     'label' => __('Sync Links'),
                     'on_click' => '',
