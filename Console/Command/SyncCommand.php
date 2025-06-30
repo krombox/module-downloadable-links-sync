@@ -8,9 +8,11 @@ use Krombox\DownloadableLinksSync\Model\Link\Queue\ForceQueueProcessor;
 use Krombox\DownloadableLinksSync\Model\Link\Queue\QueueGenerator;
 use Krombox\DownloadableLinksSync\Model\Link\Queue\QueueService;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 class SyncCommand extends Command
 {
@@ -48,7 +50,26 @@ class SyncCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $productIds = $this->parseProductIds($input->getOption(self::PRODUCT_IDS));
+        $productIdsOption = $input->getOption('product-ids');
+
+        if ($productIdsOption === null || trim($productIdsOption) === '') {
+            /** @var QuestionHelper $questionHelper */
+            $questionHelper = $this->getHelper('question');
+            $output->writeln('<comment>No product IDs provided. All products will be processed.</comment>');
+            $output->writeln('<comment>You can limit the sync by passing: --product-ids="1,3-5,8,10-12"</comment>');
+
+            $question = new ConfirmationQuestion(
+                '<question>Do you want to continue by processing all products? [y/N]</question> ',
+                false
+            );
+
+            if (!$questionHelper->ask($input, $output, $question)) {
+                $output->writeln('<comment>Command aborted by user.</comment>');
+                return Command::FAILURE;
+            }
+        }
+
+        $productIds = $this->parseProductIds($productIdsOption);
 
         $output->writeln('<comment>Generating queue...</comment>');
         $this->queueGenerator->generate($productIds);
@@ -70,9 +91,14 @@ class SyncCommand extends Command
     /**
      * Converts a string like "1-5,8,10-12" into an array of integers.
      */
-    private function parseProductIds(string $range): array
+    private function parseProductIds(?string $range): array
     {
         $ids = [];
+
+        if ($range === null || trim($range) === '') {
+            return $ids;
+        }
+
 
         foreach (explode(',', $range) as $part) {
             $part = trim($part);
