@@ -75,15 +75,15 @@ For more details, please refer to the ``etc/di.xml`` file.
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=MWKEDP5DK5BMN)
 
-**BTC (BitCoin)**: ``bc1qqae0g74a6a7djy9a2d76ns4r0ydqvkvm96u82q``
+**BTC (BitCoin)**: ``bc1qmp5f6n6pe9xulrq0604f2zmhplz4ujq9p8cner``
 
-**LTC (Litecoin)**: ``ltc1qsq7l5dje5tlw3778z9vstm4vnf7y40fzczdc2q``
+**LTC (Litecoin)**: ``ltc1qv82lyk9u8gc4ef8duhda64ha4y435v2ve4p6py``
 
-**ETH (Ethereum ERC20)**: ``0xADcA955BFd4b9080AfAD99143BF011369d92d7d6``
+**ETH (Ethereum ERC20)**: ``0x273b0D4d4e6F6E03E2E39a3Ad02aD57d9680C820``
 
-**SOL (Solana)**: ``H65224SYDw2v2BFVBDJQLAoVXgbwVdhKKyZ9zi6uKUe1``
+**SOL, RAY, BONK, USDT (Solana)**: ``2TjJhsiqVuqZ2YuJvT5DAMuBXD5GFpu6k8ibR1pd4i8t``
 
-**USDT (TRON TRC20)**: ``TXaWfYLG1mx82Wh2Ffn4ueze46cBi3jucn``
+**TRX, USDT (TRON TRC20)**: ``TGunJ3mJx5tfYJtLsEiisqcrz5d7oga6No``
 
 
 
