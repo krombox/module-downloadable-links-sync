@@ -1,6 +1,5 @@
 <?php
 
-// @phpstan-ignore-file
 declare(strict_types=1);
 
 namespace Krombox\DownloadableLinksSync\Test\Unit\Model\Link;
@@ -10,32 +9,36 @@ use Krombox\DownloadableLinksSync\Model\Link\LinkOperationManager;
 use Krombox\DownloadableLinksSync\Model\Link\OperationInterface;
 use Krombox\DownloadableLinksSync\Model\Link\OperationPool;
 use Krombox\DownloadableLinksSync\Model\Link\Storage\StorageInterface;
+use Krombox\DownloadableLinksSync\Service\ProductTypeChecker;
 use Magento\Catalog\Model\Product;
-use Magento\Downloadable\Model\Product\Type;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class LinkOperationManagerTest extends TestCase
 {
-    private OperationPool $operationPoolMock;
-    private StorageInterface $storageMock;
+    private OperationPool&MockObject $operationPoolMock;
+    private StorageInterface&MockObject $storageMock;
     private LinkOperationManager $manager;
+    private ProductTypeChecker&MockObject $productTypeCheckerMock;
 
     protected function setUp(): void
     {
         $this->operationPoolMock = $this->createMock(OperationPool::class);
         $this->storageMock = $this->createMock(StorageInterface::class);
+        $this->productTypeCheckerMock = $this->createMock(ProductTypeChecker::class);
 
         $this->manager = new LinkOperationManager(
             $this->operationPoolMock,
-            $this->storageMock
+            $this->storageMock,
+            $this->productTypeCheckerMock
         );
     }
 
     public function testSyncProductLinksSkipsNonDownloadable(): void
     {
         $product = $this->createMock(Product::class);
-        $product->method('getTypeId')->willReturn('simple');
 
+        $this->productTypeCheckerMock->method('isSyncable')->willReturn(false);
         $this->operationPoolMock->expects($this->never())->method('getAll');
 
         $this->manager->syncProductLinks($product);
@@ -44,7 +47,8 @@ class LinkOperationManagerTest extends TestCase
     public function testSyncProductLinksForDownloadable(): void
     {
         $product = $this->createMock(Product::class);
-        $product->method('getTypeId')->willReturn(Type::TYPE_DOWNLOADABLE);
+
+        $this->productTypeCheckerMock->method('isSyncable')->willReturn(true);
 
         $operation = $this->createMock(OperationInterface::class);
         $linkMock = $this->createMock(\Magento\Downloadable\Model\Link::class);

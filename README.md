@@ -3,6 +3,8 @@
 [![Latest Version](https://img.shields.io/github/tag/krombox/module-downloadable-links-sync.svg?style=flat-square)](https://github.com/krombox/module-downloadable-links-sync/tags)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 [![Total Downloads](https://img.shields.io/packagist/dt/krombox/module-downloadable-links-sync.svg?style=flat-square)](https://packagist.org/packages/krombox/module-downloadable-links-sync)
+[![Magento 2.4 Compatibility](https://img.shields.io/badge/Magento-2.4.4%20%E2%80%93%202.4.9-orange.svg?style=flat-square)](https://magento.com/)
+[![PHP](https://img.shields.io/badge/PHP-%3E%3D8.1%20%3C8.6-777BB4.svg?style=flat-square)](https://php.net/)
 
 This module lets you sync new, edited, and deleted product downloadable links to existing orders.
 Example: Your store has product A with a downloadable link, "link #1." There are several orders containing that product.
@@ -14,7 +16,8 @@ The module uses [Magento`s message queue](https://developer.adobe.com/commerce/p
 
 ## Prerequirements
 
-1) PHP >= 8.0
+1) PHP >= 8.1 < 8.6
+2) Magento 2.4.4+ (Adobe Commerce Cloud or on-premises)
 
 ## Installation
 
