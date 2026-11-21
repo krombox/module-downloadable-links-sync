@@ -1,0 +1,15 @@
+name: ExtDN M2 Mess Detector
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  php81:
+    name: M2 Mess Detector (PHP 8.1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: extdn/github-actions-m2/magento-mess-detector/8.1@master
