@@ -3,7 +3,7 @@ grumphp:
     variables:
       #important config. Otherwise, not recognize git diff changes. See .git/hooks/pre-comit.
       GRUMPHP_PROJECT_DIR: "."
-      GRUMPHP_BIN_DIR: "../../../../magento2/magento/vendor/bin"
+      GRUMPHP_BIN_DIR: "../../../../vendor/bin"
   fixer:
     enabled: false
     fix_by_default: false
@@ -56,19 +56,16 @@ grumphp:
     phpcsfixer:
       allow_risky: ~
       cache_file: ~
-      config: '../../../../magento2/.php-cs-fixer.php'
+      config: '../../../../.php-cs-fixer.dist.php'
       rules: [ ]
       using_cache: false
-      config_contains_finder: true
+      config_contains_finder: false
       verbose: true
       diff: false
       triggered_by: [ 'php' ]
     phpstan:
       autoload_file: ~
-      level: 5
-      configuration: 'phpstan.neon'
-      triggered_by: [ 'php', 'js', 'html', 'phtml' ]
-    phpmd:
-      ruleset: [ '../../../../magento2/magento/dev/tests/static/testsuite/Magento/Test/Php/_files/phpmd/ruleset.xml' ]
+      level: 1
+      configuration: 'phpstan.neon.dist'
       triggered_by: [ 'php', 'js', 'html', 'phtml' ]
 
