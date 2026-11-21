@@ -20,6 +20,9 @@ grumphp:
     git_commit_message:
       max_body_width: 200
       max_subject_width: 200
+      enforce_capitalized_subject: false
+      type_scope_conventions:
+        - '/^(build|ci|docs|feat|fix|perf|refactor|revert|style|test)(\(.+\))?!?: .+/'
     git_blacklist:
       keywords:
         - "\\.dev"
