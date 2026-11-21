@@ -45,7 +45,7 @@ class LinkRepository
 
     /**
      * @param \Magento\Downloadable\Model\LinkRepository $subject
-     * @param mixed $result
+     * @param int $result
      * @param string $sku
      * @param Link $link
      *

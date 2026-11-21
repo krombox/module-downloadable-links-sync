@@ -3,7 +3,7 @@
 namespace Krombox\DownloadableLinksSync\Model\Link;
 
 use InvalidArgumentException;
-use Laminas\Crypt\Exception\NotFoundException;
+use Magento\Framework\Exception\NotFoundException;
 
 class OperationPool
 {
