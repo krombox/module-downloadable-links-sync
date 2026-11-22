@@ -1,0 +1,34 @@
+name: Unit Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  unit-tests:
+    name: Magento 2 Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      MODULE_NAME: Krombox_DownloadableLinksSync
+      COMPOSER_NAME: krombox/module-downloadable-links-sync
+      BLOCK_INSECURE: 'false'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: extdn/github-actions-m2/magento-unit-tests/8.1@master
+        env:
+          MAGENTO_VERSION: '2.4.4-p13'
+      - uses: extdn/github-actions-m2/magento-unit-tests/8.2@master
+        env:
+          MAGENTO_VERSION: '2.4.6-p15'
+      - uses: extdn/github-actions-m2/magento-unit-tests/8.3@master
+        env:
+          MAGENTO_VERSION: '2.4.7-p10'
+      - uses: extdn/github-actions-m2/magento-unit-tests/8.4@master
+        env:
+          MAGENTO_VERSION: '2.4.8-p5'
+      - uses: extdn/github-actions-m2/magento-unit-tests/8.5@master
+        env:
+          MAGENTO_VERSION: '2.4.9'
