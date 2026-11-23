@@ -3,20 +3,23 @@ declare(strict_types=1);
 
 namespace Krombox\DownloadableLinksSync\Test\Integrational\Console\Command;
 
+use Krombox\DownloadableLinksSync\Console\Command\SyncCommand;
 use Krombox\DownloadableLinksSync\Model\Link\Manager;
+use Krombox\DownloadableLinksSync\Test\Integration\Support\RestoresDeploymentConfig;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\TestFramework\Helper\Bootstrap;
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Console\Command\Command;
-use Krombox\DownloadableLinksSync\Console\Command\SyncCommand;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Store\Model\ResourceModel\Store as StoreResource;
 use Magento\Store\Model\StoreFactory;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\TestFramework\Helper\Bootstrap;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Tester\CommandTester;
 
 class SyncCommandTest extends TestCase
 {
+    use RestoresDeploymentConfig;
+
     private $productRepository;
 
     private $syncCommand;
@@ -29,6 +32,7 @@ class SyncCommandTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
+        self::backupDeploymentConfig();
         self::createSecondStore();
     }
 
@@ -73,6 +77,12 @@ class SyncCommandTest extends TestCase
         $this->storeManager = $objectManager->get(StoreManagerInterface::class);
     }
 
+    protected function tearDown(): void
+    {
+        self::restoreDeploymentConfig();
+        parent::tearDown();
+    }
+
     /**
      * @magentoDataFixture Magento/Customer/_files/customer.php
      * @magentoDataFixture loadFixture
@@ -104,7 +114,8 @@ class SyncCommandTest extends TestCase
                     0,
                     $linkPurchasedItemCollection->getSize(),
                     'There should be at least 1 purchased link. This verifies that new product links have been
-                    successfully synced to existing orders.');
+                    successfully synced to existing orders.'
+                );
 
                 /* Compare existing product downloadable link data with purchased links */
                 foreach ($linkPurchasedItemCollection as $linkPurchasedItem) {
