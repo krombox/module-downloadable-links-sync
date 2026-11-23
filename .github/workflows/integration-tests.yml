@@ -1,0 +1,116 @@
+name: Integration Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  php81:
+    name: Integration Tests (PHP 8.1, Magento 2.4.6)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: --tmpfs /var/lib/mysql:rw --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=10
+      es:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        options: --health-cmd="curl -sf http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      MODULE_NAME: Krombox_DownloadableLinksSync
+      COMPOSER_NAME: krombox/module-downloadable-links-sync
+      BLOCK_INSECURE: 'false'
+      ELASTICSEARCH: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: extdn/github-actions-m2/magento-integration-tests/8.1@master
+        env:
+          MAGENTO_VERSION: '2.4.6-p15'
+
+  php83:
+    name: Integration Tests (PHP 8.3, Magento 2.4.7)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: --tmpfs /var/lib/mysql:rw --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=10
+      es:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.28
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        options: --health-cmd="curl -sf http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      MODULE_NAME: Krombox_DownloadableLinksSync
+      COMPOSER_NAME: krombox/module-downloadable-links-sync
+      BLOCK_INSECURE: 'false'
+      ELASTICSEARCH: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: extdn/github-actions-m2/magento-integration-tests/8.3@master
+        env:
+          MAGENTO_VERSION: '2.4.7-p10'
+
+  php84:
+    name: Integration Tests (PHP 8.4, Magento 2.4.8)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: --tmpfs /var/lib/mysql:rw --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=10
+      es:
+        image: wardenenv/elasticsearch:8.19
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          ES_JAVA_OPTS: -Xms64m -Xmx512m
+        options: --health-cmd="curl -sf 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s'" --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      MODULE_NAME: Krombox_DownloadableLinksSync
+      COMPOSER_NAME: krombox/module-downloadable-links-sync
+      BLOCK_INSECURE: 'false'
+      ELASTICSEARCH: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: extdn/github-actions-m2/magento-integration-tests/8.4@master
+        env:
+          MAGENTO_VERSION: '2.4.8-p5'
+
+  php85:
+    name: Integration Tests (PHP 8.5, Magento 2.4.9)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: --tmpfs /var/lib/mysql:rw --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=10
+      es:
+        image: wardenenv/elasticsearch:8.19
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          ES_JAVA_OPTS: -Xms64m -Xmx512m
+        options: --health-cmd="curl -sf 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=60s'" --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      MODULE_NAME: Krombox_DownloadableLinksSync
+      COMPOSER_NAME: krombox/module-downloadable-links-sync
+      BLOCK_INSECURE: 'false'
+      ELASTICSEARCH: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: extdn/github-actions-m2/magento-integration-tests/8.5@master
+        env:
+          MAGENTO_VERSION: '2.4.9'
