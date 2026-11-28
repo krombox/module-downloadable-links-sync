@@ -1,0 +1,21 @@
+{
+    "downloadable_link_purchased_item": {
+        "index": {
+            "DOWNLOADABLE_LINK_PURCHASED_ITEM_PRODUCT_ID": true,
+            "DOWNLOADABLE_LINK_PURCHASED_ITEM_LINK_ID": true
+        }
+    },
+    "krombox_downloadable_links_sync_queue": {
+        "column": {
+            "queue_id": true,
+            "product_id": true,
+            "link_id": true,
+            "action": true,
+            "ids": true
+        },
+        "constraint": {
+            "KROMBOX_DL_LNKS_SYNC_QUEUE_PRD_ID_CAT_PRD_ENTT_ENTT_ID": true,
+            "PRIMARY": true
+        }
+    }
+}
